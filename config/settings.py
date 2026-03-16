@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     "dj_rest_auth",
     "dj_rest_auth.registration",
      "users",
+     "products",
 
    
 ]
@@ -160,3 +161,6 @@ ACCOUNT_EMAIL_VERIFICATION = "none"
 ACCOUNT_AUTHENTICATION_METHOD = "email"
 ACCOUNT_EMAIL_REQUIRED = True
 GOOGLE_CLIENT_ID ="564805160217-453i4t6k91rvlrum1l5obdga7hv13egl.apps.googleusercontent.com"
+SUPABASE_URL="https://riihjuwoxcycbkxznvqt.supabase.co"
+SUPABASE_SERVICE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJpaWhqdXdveGN5Y2JreHpudnF0Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MzU1MzQ0MywiZXhwIjoyMDg5MTI5NDQzfQ._tesU1YkWE7oHUaJwvQ-QSZ4-0N4g15_DFeB0uyhPyM"
+

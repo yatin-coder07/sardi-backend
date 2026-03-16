@@ -75,7 +75,8 @@ class UserDetailView(APIView):
             "id": user.id,
             "username": user.username,
             "email": user.email,
-            "profile_picture": user.profile_picture
+            "profile_picture": user.profile_picture,
+             "is_staff": user.is_staff,
         })
 class LogoutView(APIView):
     permission_classes = [IsAuthenticated]
