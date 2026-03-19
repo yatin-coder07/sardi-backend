@@ -12,6 +12,10 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 
 from pathlib import Path
 from datetime import timedelta
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -52,6 +56,8 @@ INSTALLED_APPS = [
     "dj_rest_auth.registration",
      "users",
      "products",
+     "orders",
+     "cart",
 
    
 ]
@@ -161,6 +167,17 @@ ACCOUNT_EMAIL_VERIFICATION = "none"
 ACCOUNT_AUTHENTICATION_METHOD = "email"
 ACCOUNT_EMAIL_REQUIRED = True
 GOOGLE_CLIENT_ID ="564805160217-453i4t6k91rvlrum1l5obdga7hv13egl.apps.googleusercontent.com"
-SUPABASE_URL="https://riihjuwoxcycbkxznvqt.supabase.co"
-SUPABASE_SERVICE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJpaWhqdXdveGN5Y2JreHpudnF0Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MzU1MzQ0MywiZXhwIjoyMDg5MTI5NDQzfQ._tesU1YkWE7oHUaJwvQ-QSZ4-0N4g15_DFeB0uyhPyM"
+SUPABASE_URL=os.getenv("SUPABASE_PROJECT_URL")
+SUPABASE_SERVICE_KEY=os.getenv("SUPABASE_SERVICE_KEY")
 
+RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID")
+RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET")
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = "smtp.gmail.com"
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
+
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
