@@ -70,7 +70,7 @@ class GoogleAuthView(APIView):
             try:
                 user = User.objects.filter(email=email).first()
 
-                ADMIN_EMAIL = "yatins113@gmail.com"
+                ADMIN_EMAIL = "shivamsharmashivamsharma695@gmail.com"
 
                 if not user:
                     user = User.objects.create(
