@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import GoogleAuthView, UserDetailView , FixAdminsView
+from .views import GoogleAuthView, UserDetailView
 from rest_framework_simplejwt.views import TokenRefreshView
 
 urlpatterns = [
