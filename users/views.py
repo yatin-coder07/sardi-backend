@@ -182,28 +182,3 @@ class LogoutView(APIView):
             )
         
     
-class FixAdminsView(APIView):
-    permission_classes = [IsAuthenticated]  # 🔐 secure
-
-    def post(self, request):
-        ADMIN_EMAILS = [
-            "shivamsharmashivamsharma695@gmail.com",
-            "Palash.attri.123@gmail.com",
-            "rvshawls_1977@yahoo.com",
-            "yatins113@gmail.com"
-        ]
-
-        updated_users = []
-
-        users = User.objects.filter(email__in=ADMIN_EMAILS)
-
-        for user in users:
-            user.is_staff = True
-            user.is_superuser = True
-            user.save()
-            updated_users.append(user.email)
-
-        return Response({
-            "message": "Admins updated successfully",
-            "updated_users": updated_users
-        })
