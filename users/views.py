@@ -3,14 +3,19 @@ from rest_framework.response import Response
 from rest_framework import status
 from google.oauth2 import id_token
 from google.auth.transport import requests
+from django.conf import settings
 import os
-import traceback  # ✅ important
 
 from rest_framework_simplejwt.tokens import RefreshToken
 from .serializers import GoogleAuthSerializer
 from users.models import User
+from rest_framework.permissions import IsAuthenticated
+
+import traceback  # ✅ important
 
 
+
+# 🔥 GOOGLE AUTH VIEW
 class GoogleAuthView(APIView):
     permission_classes = []  # public
 
@@ -122,4 +127,47 @@ class GoogleAuthView(APIView):
             return Response(
                 {"error": f"Unexpected error: {str(e)}"},
                 status=500
+            )
+# 🔥 USER DETAILS
+class UserDetailView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+
+        return Response({
+            "id": user.id,
+            "username": user.username,
+            "email": user.email,
+            "profile_picture": user.profile_picture,
+            "is_staff": user.is_staff,
+        })
+
+
+# 🔥 LOGOUT
+class LogoutView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        try:
+            refresh_token = request.data.get("refresh_token")
+
+            if not refresh_token:
+                return Response(
+                    {"error": "Refresh token required"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+
+            return Response(
+                {"detail": "Logout successful"},
+                status=status.HTTP_205_RESET_CONTENT
+            )
+
+        except Exception as e:
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_400_BAD_REQUEST
             )
