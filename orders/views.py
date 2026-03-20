@@ -175,42 +175,119 @@ class MyOrdersView(APIView):
     )
 
 
-class CancelOrderView(APIView):
-    permission_classes = [IsAuthenticated]
+class CreateOrderView(APIView):
 
-    def post(self, request, order_id):
-
+    def post(self, request):
         try:
-            order = Order.objects.get(id=order_id, user=request.user)
+            print("📥 REQUEST DATA:", request.data)
 
-            # ❌ Prevent cancelling delivered orders
-            if order.order_status == "DELIVERED":
-                return Response(
-                    {"error": "Delivered orders cannot be cancelled"},
-                    status=400
+            user = request.user
+            data = request.data
+            items = data.get("items", [])
+
+            total_amount = 0
+
+            # ✅ CREATE ORDER
+            order = Order.objects.create(
+                user=user,
+                name=data.get("name"),
+                phone_number=data.get("phone_number"),
+                address=data.get("address"),
+                secondary_address=data.get("secondary_address"),
+                landmark=data.get("landmark"),
+                total_amount=0
+            )
+            print("🆕 Order created:", order.id)
+
+            # ✅ PROCESS ITEMS
+            for item in items:
+                try:
+                    product = Product.objects.get(id=item["product_id"])
+                except Exception as e:
+                    print("❌ PRODUCT ERROR:", str(e))
+                    raise
+
+                quantity = item.get("quantity", 1)
+                price = product.price
+
+                total_amount += price * quantity
+
+                OrderItem.objects.create(
+                    order=order,
+                    product=product,
+                    quantity=quantity,
+                    price=price
                 )
 
-            # ❌ Prevent cancelling already cancelled orders
-            if order.order_status == "CANCELLED":
-                return Response(
-                    {"error": "Order already cancelled"},
-                    status=400
-                )
-
-            # ✅ Update status
-            order.order_status = "CANCELLED"
+            order.total_amount = total_amount
             order.save()
 
+            print("💰 Total amount:", total_amount)
+
+            # ✅ RAZORPAY ORDER
+            try:
+                print("🔑 RAZORPAY KEY:", settings.RAZORPAY_KEY_ID)
+
+                client = razorpay.Client(auth=(
+                    settings.RAZORPAY_KEY_ID,
+                    settings.RAZORPAY_KEY_SECRET
+                ))
+
+                payment = client.order.create({
+                    "amount": int(total_amount * 100),
+                    "currency": "INR",
+                    "payment_capture": 1
+                })
+
+                print("✅ Razorpay order created:", payment)
+
+            except Exception as e:
+                print("❌ RAZORPAY ERROR:", str(e))
+                import traceback
+                traceback.print_exc()
+                return Response(
+                    {"error": f"Razorpay failed: {str(e)}"},
+                    status=500
+                )
+
+            order.razorpay_order_id = payment["id"]
+            order.save()
+
+            # ✅ EMAIL (SAFE)
+            try:
+                print("📧 Sending email...")
+
+                subject = "Your Order is Confirmed 🛍️✨"
+                to_email = user.email
+
+                email = EmailMultiAlternatives(
+                    subject,
+                    "Order placed successfully",
+                    settings.DEFAULT_FROM_EMAIL,
+                    [to_email]
+                )
+
+                email.send(fail_silently=True)  # 🔥 changed to avoid crash
+
+                print("✅ Email sent")
+
+            except Exception as e:
+                print("❌ EMAIL ERROR:", str(e))
+
             return Response({
-                "message": "Order cancelled successfully",
                 "order_id": order.id,
-                "status": order.order_status
+                "razorpay_order_id": payment["id"],
+                "amount": total_amount
             })
 
-        except Order.DoesNotExist:
+        except Exception as e:
+            print("💥 FINAL ERROR:", str(e))
+            import traceback
+            traceback.print_exc()
+
             return Response(
-                {"error": "Order not found"},
-                status=404
+                {"error": str(e)},
+                status=500
             )
         
 
