@@ -34,6 +34,8 @@ class ProductListView(APIView):
 
 class ProductDetailView(APIView):
 
+    permission_classes = [AllowAny]
+
     def get(self, request, pk):
         product = Product.objects.get(pk=pk)
         serializer = ProductSerializer(product)

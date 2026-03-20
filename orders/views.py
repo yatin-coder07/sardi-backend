@@ -33,6 +33,9 @@ class CreateOrderView(APIView):
                 address=data.get("address"),
                 secondary_address=data.get("secondary_address"),
                 landmark=data.get("landmark"),
+                city=data.get("city"),        # ✅ ADDED
+                state=data.get("state"),      # ✅ ADDED
+                pincode=data.get("pincode"),  # ✅ ADDED
                 total_amount=0
             )
             print("🆕 Order created:", order.id)
@@ -149,7 +152,7 @@ class MyOrdersView(APIView):
     def delete(self, request, order_id):
         order = get_object_or_404(Order, id=order_id, user=request.user)
 
-        if order.order_status not in ["PENDING", "CANCELLED"]:
+        if order.order_status not in ["PENDING", "CANCELLED","DELIVERED"]:
             return Response(
                 {"error": "Only failed or cancelled orders can be deleted"},
                 status=status.HTTP_400_BAD_REQUEST

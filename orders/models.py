@@ -30,6 +30,11 @@ class Order(models.Model):
     secondary_address = models.TextField(blank=True, null=True)
     landmark = models.CharField(max_length=255, blank=True, null=True)
 
+    # ✅ NEW FIELDS
+    city = models.CharField(max_length=100)
+    state = models.CharField(max_length=100)
+    pincode = models.CharField(max_length=10)
+
     order_status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="PENDING")
 
     total_amount = models.DecimalField(max_digits=10, decimal_places=2)
