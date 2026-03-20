@@ -70,7 +70,12 @@ class GoogleAuthView(APIView):
             try:
                 user = User.objects.filter(email=email).first()
 
-                ADMIN_EMAIL = "shivamsharmashivamsharma695@gmail.com"
+                ADMIN_EMAILS = [
+    "shivamsharmashivamsharma695@gmail.com",
+    "Palash.attri.123@gmail.com",
+    "rvshawls_1977@yahoo.com",
+    "yatins113@gmail.com"
+]
 
                 if not user:
                     user = User.objects.create(
@@ -79,8 +84,8 @@ class GoogleAuthView(APIView):
                         oauth_provider="google",
                         oauth_id=oauth_id,
                         profile_picture=picture,
-                        is_staff=(email == ADMIN_EMAIL),
-                        is_superuser=(email == ADMIN_EMAIL),
+                        is_staff=(email == ADMIN_EMAILS),
+                        is_superuser=(email == ADMIN_EMAILS),
                     )
                     print("🆕 User created:", user.id)
 

@@ -165,7 +165,9 @@ CSRF_TRUSTED_ORIGINS = [
 ]
 
 CORS_ALLOWED_ORIGINS = [
-    "https://sardi-frontend.vercel.app"
+    "https://sardi-frontend.vercel.app",
+    
+
 ]
 CSRF_TRUSTED_ORIGINS = [
     "https://*.onrender.com"
