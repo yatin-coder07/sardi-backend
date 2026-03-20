@@ -3,7 +3,6 @@ from rest_framework.response import Response
 from rest_framework import status
 from google.oauth2 import id_token
 from google.auth.transport import requests
-from django.conf import settings
 import os
 
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -12,7 +11,6 @@ from users.models import User
 from rest_framework.permissions import IsAuthenticated
 
 import traceback  # ✅ important
-
 
 
 # 🔥 GOOGLE AUTH VIEW
@@ -28,7 +26,7 @@ class GoogleAuthView(APIView):
             serializer.is_valid(raise_exception=True)
 
             token = serializer.validated_data["token"]
-            print("🔑 Token received:", token[:30], "...")  # partial log
+            print("🔑 Token received:", token[:30], "...")
 
             # ✅ Get client ID
             GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
@@ -51,7 +49,7 @@ class GoogleAuthView(APIView):
 
             except Exception as e:
                 print("❌ GOOGLE VERIFY ERROR:", str(e))
-                traceback.print_exc()  # full stack trace
+                traceback.print_exc()
                 return Response(
                     {"error": f"Google verification failed: {str(e)}"},
                     status=400
@@ -68,9 +66,11 @@ class GoogleAuthView(APIView):
             if not email:
                 return Response({"error": "Email not available"}, status=400)
 
-            # ✅ SAFE USER CREATION (better than get_or_create)
+            # ✅ SAFE USER CREATION
             try:
                 user = User.objects.filter(email=email).first()
+
+                ADMIN_EMAIL = "yatins113@gmail.com"
 
                 if not user:
                     user = User.objects.create(
@@ -79,6 +79,8 @@ class GoogleAuthView(APIView):
                         oauth_provider="google",
                         oauth_id=oauth_id,
                         profile_picture=picture,
+                        is_staff=(email == ADMIN_EMAIL),
+                        is_superuser=(email == ADMIN_EMAIL),
                     )
                     print("🆕 User created:", user.id)
 
@@ -128,6 +130,8 @@ class GoogleAuthView(APIView):
                 {"error": f"Unexpected error: {str(e)}"},
                 status=500
             )
+
+
 # 🔥 USER DETAILS
 class UserDetailView(APIView):
     permission_classes = [IsAuthenticated]
