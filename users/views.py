@@ -84,8 +84,8 @@ class GoogleAuthView(APIView):
                         oauth_provider="google",
                         oauth_id=oauth_id,
                         profile_picture=picture,
-                        is_staff=(email == ADMIN_EMAILS),
-                        is_superuser=(email == ADMIN_EMAILS),
+                        is_staff=(email in ADMIN_EMAILS),
+                        is_superuser=(email in ADMIN_EMAILS),
                     )
                     print("🆕 User created:", user.id)
 
@@ -180,3 +180,30 @@ class LogoutView(APIView):
                 {"error": str(e)},
                 status=status.HTTP_400_BAD_REQUEST
             )
+        
+    
+class FixAdminsView(APIView):
+    permission_classes = [IsAuthenticated]  # 🔐 secure
+
+    def post(self, request):
+        ADMIN_EMAILS = [
+            "shivamsharmashivamsharma695@gmail.com",
+            "Palash.attri.123@gmail.com",
+            "rvshawls_1977@yahoo.com",
+            "yatins113@gmail.com"
+        ]
+
+        updated_users = []
+
+        users = User.objects.filter(email__in=ADMIN_EMAILS)
+
+        for user in users:
+            user.is_staff = True
+            user.is_superuser = True
+            user.save()
+            updated_users.append(user.email)
+
+        return Response({
+            "message": "Admins updated successfully",
+            "updated_users": updated_users
+        })

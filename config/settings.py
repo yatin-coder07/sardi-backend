@@ -166,7 +166,7 @@ CSRF_TRUSTED_ORIGINS = [
 
 CORS_ALLOWED_ORIGINS = [
     "https://sardi-frontend.vercel.app",
-    
+    "http://localhost:3000"
 
 ]
 CSRF_TRUSTED_ORIGINS = [
