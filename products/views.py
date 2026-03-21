@@ -15,6 +15,7 @@ from utils.supabase import upload_product_image
 class ProductListView(APIView):
   
   permission_classes = [AllowAny]
+  authentication_classes = []
 
   def get(self, request):
 
@@ -35,6 +36,7 @@ class ProductListView(APIView):
 class ProductDetailView(APIView):
 
     permission_classes = [AllowAny]
+    authentication_classes = []
 
     def get(self, request, pk):
         product = Product.objects.get(pk=pk)
