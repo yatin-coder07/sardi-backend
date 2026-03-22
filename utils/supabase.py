@@ -8,7 +8,9 @@ supabase = create_client(
 )
 
 
+
 def upload_product_image(file):
+    
 
     file_ext = file.name.split(".")[-1]
 

@@ -2,49 +2,64 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, permissions
 from django.db.models import Q
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 
-
-from .models import Product ,ProductImage
-from .serializers import ProductSerializer
+from .models import Product, ProductImage, Review
+from .serializers import ProductSerializer, ReviewSerializer
 
 from utils.supabase import upload_product_image
 
 
+# =========================
 # GET all products
+# =========================
 class ProductListView(APIView):
   
-  permission_classes = [AllowAny]
-  authentication_classes = []
+    permission_classes = [AllowAny]
+    authentication_classes = []
 
-  def get(self, request):
+    def get(self, request):
 
-    query = request.GET.get("search", "")
+        query = request.GET.get("search", "")
+        collection = request.GET.get("collection")  # ✅ NEW FILTER
 
-    if query:
-        products = Product.objects.filter(
-            Q(product_name__icontains=query) |
-            Q(product_description__icontains=query)
-        )
-    else:
         products = Product.objects.all()
 
-    serializer = ProductSerializer(products, many=True)
+        if query:
+            products = products.filter(
+                Q(product_name__icontains=query) |
+                Q(product_description__icontains=query)
+            )
 
-    return Response(serializer.data)
+        if collection:
+            products = products.filter(collection=collection)
 
+        serializer = ProductSerializer(products, many=True)
+
+        return Response(serializer.data)
+
+
+# =========================
+# GET single product
+# =========================
 class ProductDetailView(APIView):
 
     permission_classes = [AllowAny]
     authentication_classes = []
 
     def get(self, request, pk):
-        product = Product.objects.get(pk=pk)
+        try:
+            product = Product.objects.get(pk=pk)
+        except Product.DoesNotExist:
+            return Response({"error": "Product not found"}, status=404)
+
         serializer = ProductSerializer(product)
         return Response(serializer.data)
 
-   
 
+# =========================
+# CREATE product
+# =========================
 class ProductCreateView(APIView):
 
     permission_classes = [permissions.IsAdminUser]
@@ -55,13 +70,17 @@ class ProductCreateView(APIView):
             product_name=request.data.get("product_name"),
             price=request.data.get("price"),
             product_description=request.data.get("product_description"),
-            product_availability=request.data.get("product_availability")
+            product_availability=request.data.get("product_availability"),
+
+            # ✅ NEW FIELDS SUPPORT
+            material_type=request.data.get("material_type"),
+            sleeves_type=request.data.get("sleeves_type"),
+            collection=request.data.get("collection", "all"),
         )
 
         images = request.FILES.getlist("images")
 
         for img in images:
-
             image_url = upload_product_image(img)
 
             ProductImage.objects.create(
@@ -71,7 +90,10 @@ class ProductCreateView(APIView):
 
         return Response({"message": "Product created"})
 
+
+# =========================
 # UPDATE product
+# =========================
 class ProductUpdateView(APIView):
 
     permission_classes = [permissions.IsAdminUser]
@@ -100,8 +122,9 @@ class ProductUpdateView(APIView):
         return Response(serializer.errors, status=400)
 
 
-
+# =========================
 # DELETE product
+# =========================
 class ProductDeleteView(APIView):
 
     permission_classes = [permissions.IsAdminUser]
@@ -116,3 +139,87 @@ class ProductDeleteView(APIView):
         product.delete()
 
         return Response({"message": "Product deleted"})
+
+
+# =====================================================
+# ⭐ ADD REVIEW (MULTIPLE REVIEWS ALLOWED PER USER)
+# =====================================================
+class AddReviewView(APIView):
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, pk):
+
+        try:
+            product = Product.objects.get(pk=pk)
+        except Product.DoesNotExist:
+            return Response({"error": "Product not found"}, status=404)
+
+        rating = request.data.get("rating")
+        comment = request.data.get("comment")
+
+        if not rating:
+            return Response({"error": "Rating is required"}, status=400)
+
+        try:
+            rating = int(rating)
+        except:
+            return Response({"error": "Rating must be a number"}, status=400)
+
+        if rating < 1 or rating > 5:
+            return Response({"error": "Rating must be between 1 and 5"}, status=400)
+
+        review = Review.objects.create(
+            product=product,
+            user=request.user,
+            rating=rating,
+            comment=comment
+        )
+
+        return Response({
+            "message": "Review added successfully",
+            "review_id": review.id
+        })
+
+
+# =========================
+# GET ALL REVIEWS OF PRODUCT
+# =========================
+class ProductReviewListView(APIView):
+
+    permission_classes = [AllowAny]
+
+    def get(self, request, pk):
+
+        try:
+            product = Product.objects.get(pk=pk)
+        except Product.DoesNotExist:
+            return Response({"error": "Product not found"}, status=404)
+
+        reviews = product.reviews.all().order_by("-created_at")
+
+        serializer = ReviewSerializer(reviews, many=True)
+
+        return Response(serializer.data)
+
+
+# =========================
+# DELETE REVIEW (ONLY OWNER)
+# =========================
+class DeleteReviewView(APIView):
+
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, review_id):
+
+        try:
+            review = Review.objects.get(id=review_id)
+        except Review.DoesNotExist:
+            return Response({"error": "Review not found"}, status=404)
+
+        if review.user != request.user:
+            return Response({"error": "Not allowed"}, status=403)
+
+        review.delete()
+
+        return Response({"message": "Review deleted"})
