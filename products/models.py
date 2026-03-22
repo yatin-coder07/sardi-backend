@@ -83,3 +83,16 @@ class Review(models.Model):
 
     def __str__(self):
         return f"{self.user} - {self.product} ({self.rating})"
+
+class ReviewImage(models.Model):
+
+    review = models.ForeignKey(
+        Review,
+        related_name="images",
+        on_delete=models.CASCADE
+    )
+
+    image = models.URLField()
+
+    def __str__(self):
+        return f"Image for Review {self.review.id}"

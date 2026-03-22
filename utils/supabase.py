@@ -7,25 +7,26 @@ supabase = create_client(
     settings.SUPABASE_SERVICE_KEY
 )
 
+def upload_product_image(file, bucket_name):
 
+    try:
+        file_ext = file.name.split(".")[-1]
+        filename = f"{uuid.uuid4()}.{file_ext}"
 
-def upload_product_image(file):
-    
+        file_bytes = file.read()
 
-    file_ext = file.name.split(".")[-1]
+        supabase.storage.from_(bucket_name).upload(
+            path=filename,
+            file=file_bytes,
+            file_options={
+                "content-type": file.content_type
+            }
+        )
 
-    filename = f"{uuid.uuid4()}.{file_ext}"
+        public_url = supabase.storage.from_(bucket_name).get_public_url(filename)
 
-    bucket_name = "product_image"
+        return public_url
 
-    # upload to supabase storage
-    supabase.storage.from_(bucket_name).upload(
-        filename,
-        file.read(),
-        {"content-type": file.content_type}
-    )
-
-    # get public url
-    public_url = supabase.storage.from_(bucket_name).get_public_url(filename)
-
-    return public_url
+    except Exception as e:
+        print("❌ SUPABASE UPLOAD ERROR:", str(e))
+        raise e

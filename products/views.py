@@ -4,7 +4,7 @@ from rest_framework import status, permissions
 from django.db.models import Q
 from rest_framework.permissions import AllowAny, IsAuthenticated
 
-from .models import Product, ProductImage, Review
+from .models import Product, ProductImage, Review ,ReviewImage
 from .serializers import ProductSerializer, ReviewSerializer
 
 from utils.supabase import upload_product_image
@@ -81,7 +81,7 @@ class ProductCreateView(APIView):
         images = request.FILES.getlist("images")
 
         for img in images:
-            image_url = upload_product_image(img)
+            image_url = upload_product_image(img , "product_image")
 
             ProductImage.objects.create(
                 product=product,
@@ -169,6 +169,7 @@ class AddReviewView(APIView):
         if rating < 1 or rating > 5:
             return Response({"error": "Rating must be between 1 and 5"}, status=400)
 
+        # ✅ CREATE REVIEW
         review = Review.objects.create(
             product=product,
             user=request.user,
@@ -176,12 +177,23 @@ class AddReviewView(APIView):
             comment=comment
         )
 
+        # =========================
+        # ✅ HANDLE MULTIPLE IMAGES
+        # =========================
+        images = request.FILES.getlist("images")
+
+        for img in images:
+            image_url = upload_product_image(img, "review_image")
+
+            ReviewImage.objects.create(
+                review=review,
+                image=image_url
+            )
+
         return Response({
             "message": "Review added successfully",
             "review_id": review.id
         })
-
-
 # =========================
 # GET ALL REVIEWS OF PRODUCT
 # =========================

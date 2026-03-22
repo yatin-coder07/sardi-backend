@@ -1,15 +1,19 @@
 from rest_framework import serializers
-from .models import Product, ProductImage, Review
+from .models import Product, ProductImage, Review,ReviewImage
 
 
 class ProductImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProductImage
         fields = "__all__"
-
+class ReviewImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ReviewImage
+        fields = "__all__"
 
 class ReviewSerializer(serializers.ModelSerializer):
     user = serializers.StringRelatedField(read_only=True)
+    images = ReviewImageSerializer(many=True, read_only=True) 
 
     class Meta:
         model = Review
