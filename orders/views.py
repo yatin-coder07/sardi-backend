@@ -11,9 +11,15 @@ from rest_framework.permissions import IsAdminUser
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from rest_framework import status
+from django.utils import timezone
+from datetime import timedelta
+from django.db.models import Sum, Count
+from utils.emails import send_order_emails
+import threading
 
 
 class CreateOrderView(APIView):
+    permission_classes = [IsAuthenticated]
 
     def post(self, request):
         try:
@@ -36,7 +42,8 @@ class CreateOrderView(APIView):
                 city=data.get("city"),        # ✅ ADDED
                 state=data.get("state"),      # ✅ ADDED
                 pincode=data.get("pincode"),  # ✅ ADDED
-                total_amount=0
+                total_amount=0,
+               
             )
             print("🆕 Order created:", order.id)
 
@@ -62,6 +69,7 @@ class CreateOrderView(APIView):
 
             order.total_amount = total_amount
             order.save()
+           
 
             print("💰 Total amount:", total_amount)
 
@@ -134,6 +142,7 @@ class VerifyPaymentView(APIView):
             order.razorpay_signature = params_dict["razorpay_signature"]
 
             order.save()
+            threading.Thread(target=send_order_emails, args=(order,)).start()
 
             return Response({"status": "Payment successful"})
 
@@ -146,7 +155,7 @@ class MyOrdersView(APIView):
 
     def get(self, request):
         orders = Order.objects.filter(user=request.user).order_by("-created_at")
-        serializer = OrderSerializer(orders, many=True)
+        serializer = OrderSerializer(orders, many=True, context={"request": request} )
         return Response(serializer.data)
 
     def delete(self, request, order_id):
@@ -211,7 +220,7 @@ class AdminOrdersView(APIView):
             Q(order_status__in=["OUT_FOR_DELIVERY", "DELIVERED", "CANCELLED"])
         ).order_by("-created_at")
 
-        serializer = OrderSerializer(orders, many=True)
+        serializer = OrderSerializer(orders, many=True, context={"request": request} )
         return Response(serializer.data)
 
     def patch(self, request, order_id=None):
@@ -261,3 +270,48 @@ class AdminOrdersView(APIView):
 
         except Order.DoesNotExist:
             return Response({"error": "Order not found"}, status=404)
+        
+
+
+class WeeklyAnalyticsView(APIView):
+    permission_classes = [IsAdminUser]
+
+    def get(self, request):
+        today = timezone.now()
+        start_week = today - timedelta(days=7)
+
+        orders = Order.objects.filter(
+            created_at__gte=start_week,
+            is_paid=True
+        )
+
+        total_sales = orders.aggregate(total=Sum("total_amount"))["total"] or 0
+        total_orders = orders.count()
+
+        total_products = OrderItem.objects.filter(
+            order__in=orders
+        ).aggregate(total=Sum("quantity"))["total"] or 0
+
+        # daily breakdown
+        daily_data = []
+        for i in range(7):
+            day = start_week + timedelta(days=i)
+            next_day = day + timedelta(days=1)
+
+            day_orders = orders.filter(created_at__gte=day, created_at__lt=next_day)
+
+            daily_sales = day_orders.aggregate(
+                total=Sum("total_amount")
+            )["total"] or 0
+
+            daily_data.append({
+                "day": day.strftime("%a"),
+                "sales": float(daily_sales)
+            })
+
+        return Response({
+            "total_sales": total_sales,
+            "total_orders": total_orders,
+            "total_products": total_products,
+            "daily": daily_data
+        })  

@@ -2,7 +2,7 @@ from django.urls import path
 from .views import (
     CreateOrderView,
     VerifyPaymentView,
-    MyOrdersView, CancelOrderView,AdminOrdersView
+    MyOrdersView, CancelOrderView,AdminOrdersView, WeeklyAnalyticsView
 )
 
 urlpatterns = [
@@ -19,4 +19,5 @@ urlpatterns = [
      path("cancel/<int:order_id>/", CancelOrderView.as_view()),
       path("admin/orders/", AdminOrdersView.as_view()),
     path("admin/orders/<int:order_id>/", AdminOrdersView.as_view()),
+    path("admin/analytics/", WeeklyAnalyticsView.as_view()),
 ]

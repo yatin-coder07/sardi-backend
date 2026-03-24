@@ -8,6 +8,7 @@ import uuid
 class Order(models.Model):
 
     STATUS_CHOICES = [
+        ("NEW", "New"),
         ("PENDING", "Pending"),
         ("PAID", "Paid"),
         

@@ -28,8 +28,7 @@ class ProductListView(APIView):
         if query:
             products = products.filter(
                 Q(product_name__icontains=query) |
-                Q(product_description__icontains=query)
-            )
+                Q(product_description__icontains=query)|Q(collection__icontains=query)             )
 
         if collection:
             products = products.filter(collection=collection)
