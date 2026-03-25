@@ -142,14 +142,9 @@ class VerifyPaymentView(APIView):
             order.razorpay_signature = params_dict["razorpay_signature"]
 
             order.save()
-            try:
-                send_order_emails(order)
-            except Exception as e:
-                print(f"❌ Email error: {str(e)}")
+            threading.Thread(target=send_order_emails, args=(order,), daemon=True)
 
             return Response({"status": "Payment successful"})
-
-            
 
         except Exception as e:
             try:
