@@ -142,12 +142,27 @@ class VerifyPaymentView(APIView):
             order.razorpay_signature = params_dict["razorpay_signature"]
 
             order.save()
-            threading.Thread(target=send_order_emails, args=(order,)).start()
+            send_order_emails()
 
             return Response({"status": "Payment successful"})
 
-        except:
-            return Response({"status": "Payment failed"}, status=400)
+        except Exception as e:
+            try:
+                order = Order.objects.get(
+                    razorpay_order_id=params_dict.get("razorpay_order_id")
+                )
+
+                order.is_paid = False
+                order.order_status = "FAILED"
+                order.save()
+
+            except Order.DoesNotExist:
+                pass
+
+            return Response(
+                {"status": "Payment failed"},
+                status=400
+            )
 
 
 class MyOrdersView(APIView):
