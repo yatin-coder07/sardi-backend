@@ -142,7 +142,7 @@ class VerifyPaymentView(APIView):
             order.razorpay_signature = params_dict["razorpay_signature"]
 
             order.save()
-            send_order_emails(order)
+            threading.Thread(target=send_order_emails, args=(order,), daemon=True)
 
             return Response({"status": "Payment successful"})
 

@@ -169,6 +169,17 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000"
 
 ]
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "console": {"class": "logging.StreamHandler"},
+    },
+    "root": {
+        "handlers": ["console"],
+        "level": "INFO",
+    },
+}
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
@@ -185,14 +196,16 @@ SUPABASE_SERVICE_KEY=os.getenv("SUPABASE_SERVICE_KEY")
 
 RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID")
 RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET")
+
+
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-EMAIL_HOST = "smtp-relay.brevo.com"
+EMAIL_HOST = "smtp.gmail.com"
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-
 EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
-EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
-ADMIN_EMAIL=os.getenv("ADMIN_EMAIL")
+EMAIL_HOST_PASSWORD = os.getenv("GMAIL_APP_PASSWORD")
+DEFAULT_FROM_EMAIL = os.getenv("EMAIL_HOST_USER")
+ADMIN_EMAIL = os.getenv("ADMIN_EMAIL")
 
-DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+DEFAULT_FROM_EMAIL ="yatins113@gmail.com"
 ACCOUNT_DEFAULT_HTTP_PROTOCOL = "https"
