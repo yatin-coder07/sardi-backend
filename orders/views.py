@@ -272,7 +272,7 @@ class AdminOrdersView(APIView):
         try:
             order = Order.objects.get(id=order_id)
 
-            if order.order_status != "CANCELLED":
+            if order.order_status not in ["CANCELLED", "DELIVERED"]:
                 return Response({
                     "error": "Only cancelled orders can be deleted"
                 }, status=400)
