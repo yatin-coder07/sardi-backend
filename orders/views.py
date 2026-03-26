@@ -176,9 +176,9 @@ class MyOrdersView(APIView):
     def delete(self, request, order_id):
         order = get_object_or_404(Order, id=order_id, user=request.user)
 
-        if order.order_status not in ["FAILED", "CANCELLED","DELIVERED"]:
+        if order.order_status not in ["FAILED"]:
             return Response(
-                {"error": "Only failed or cancelled orders can be deleted"},
+                {"error": "Only failed orders can be deleted"},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
