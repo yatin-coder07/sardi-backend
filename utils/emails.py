@@ -1,8 +1,10 @@
-from django.core.mail import send_mail
+import resend
 from django.conf import settings
 import logging
 
 logger = logging.getLogger(__name__)
+
+resend.api_key = settings.RESEND_API_KEY
 
 
 def send_order_emails(order):
@@ -14,23 +16,20 @@ def send_order_emails(order):
 
     # ✅ EMAIL TO CUSTOMER
     try:
-        html_user = f"""
-        <h2>Thanks for your order, {user.username} 🎉</h2>
-        <p><b>Order ID:</b> {order.id}</p>
-        <p><b>Total:</b> ₹{order.total_amount}</p>
-        <h3>Items:</h3>
-        <ul>{items_html}</ul>
-        <p>We'll notify you once it's shipped 🚚</p>
-        <p>— Team Sardi ❤️</p>
-        """
-        send_mail(
-            subject=f"Your Order #{order.id} Has been Confirmed 🛍️",
-            message=f"Order #{order.id} confirmed. Total: ₹{order.total_amount}",
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[user.email],
-            html_message=html_user,
-            fail_silently=False,
-        )
+        resend.Emails.send({
+            "from": "Sardi Store <onboarding@resend.dev>",
+            "to": [user.email],
+            "subject": f"Your Order #{order.id} Has been Confirmed 🛍️",
+            "html": f"""
+                <h2>Thanks for your order, {user.username} 🎉</h2>
+                <p><b>Order ID:</b> {order.id}</p>
+                <p><b>Total:</b> ₹{order.total_amount}</p>
+                <h3>Items:</h3>
+                <ul>{items_html}</ul>
+                <p>We'll notify you once it's shipped 🚚</p>
+                <p>— Team Sardi ❤️</p>
+            """
+        })
         logger.info(f"✅ Customer email sent to {user.email} for order {order.id}")
 
     except Exception as e:
@@ -38,22 +37,19 @@ def send_order_emails(order):
 
     # ✅ EMAIL TO ADMIN
     try:
-        html_admin = f"""
-        <h2>New Order Received 🚨</h2>
-        <p><b>User:</b> {user.email}</p>
-        <p><b>Order ID:</b> {order.id}</p>
-        <p><b>Total:</b> ₹{order.total_amount}</p>
-        <h3>Items:</h3>
-        <ul>{items_html}</ul>
-        """
-        send_mail(
-            subject=f"🚨 New Order #{order.id}",
-            message=f"New order from {user.email}. Total: ₹{order.total_amount}",
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[settings.ADMIN_EMAIL],
-            html_message=html_admin,
-            fail_silently=False,
-        )
+        resend.Emails.send({
+            "from": "Sardi Store <onboarding@resend.dev>",
+            "to": [settings.ADMIN_EMAIL],
+            "subject": f"🚨 New Order #{order.id}",
+            "html": f"""
+                <h2>New Order Received 🚨</h2>
+                <p><b>User:</b> {user.email}</p>
+                <p><b>Order ID:</b> {order.id}</p>
+                <p><b>Total:</b> ₹{order.total_amount}</p>
+                <h3>Items:</h3>
+                <ul>{items_html}</ul>
+            """
+        })
         logger.info(f"✅ Admin email sent for order {order.id}")
 
     except Exception as e:
